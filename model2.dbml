@@ -1,0 +1,121 @@
+Project Model2 {
+database_type: 'SQL'
+note: '''
+# Ecommerce Database
+**markdown content here**
+'''
+}
+
+TableGroup dimension_tables { 
+  channel
+  device
+  country 
+  property
+}
+
+TableGroup fact_tables { 
+  fact_one
+  
+}
+
+// Creating tables
+Table fact_one as U [headercolor: #fd810b] {
+  c_id int [pk, increment] // auto-increment
+  date date
+  property_id int [ref: > property.id]
+  channel_id int [ref: > channel.id]
+  device_id int [ref: > device.id]
+  country_id int [ref: > country.id]
+  monetization_id int
+  platform_id int
+  sessions_id int
+  revenue numeric
+  spend numeric
+  gross_profit numeric
+  ppc_click int
+  ppc_click_vct int
+  ppc_vendor_conv int
+  ppl_conv int
+  ppl_qual int
+
+  
+}
+
+
+
+// Creating references
+// You can also define relaionship separately
+// > many-to-one; < one-to-many; - one-to-one
+//Ref: U.country_code > countries.code  
+
+//----------------------------------------------//
+
+//// -- LEVEL 2
+//// -- Adding column settings
+
+Table channel {
+  id int [pk, unique] 
+  channel varchar
+  channel_grouping varchar
+  tld_ind boolean [not null]
+}
+
+//Ref: channel.product_id > device.id
+
+Table country {
+  id int [pk] // primary key
+  country_code varchar(2)
+  country_code_alt varchar(3)
+  google_country_name varchar
+  country_name_long varchar
+  country_name_short varchar
+  region varchar
+  tld_ind bool
+  domestic_ind bool
+  tz_utc_offset decimal(2)
+  //created_at varchar [note: 'When order created'] // add column note
+}
+
+//----------------------------------------------//
+
+//// -- Level 3 
+//// -- Enum, Indexes
+
+// Enum for 'products' table below
+Enum products_status {
+  out_of_stock
+  in_stock
+  running_low [note: 'less than 20'] // add column note
+}
+
+// Indexes: You can define a single or multi-column index 
+Table device {
+  id int [pk]
+  name varchar
+  merchant_id int [not null]
+  price int
+  status products_status
+  created_at datetime [default: `now()`]
+  
+  Indexes {
+    (merchant_id, status) [name:'product_status']
+    id [unique]
+  }
+}
+
+
+
+Table property {
+  id int [pk]
+  merchant_id int
+  country_code int
+  start_date datetime
+  end_date datetime
+}
+
+
+//composite foreign key
+//Ref: merchant_periods.(merchant_id, country_code) > merchants.(id, country_code)
+
+
+//Ref: "fact"."date" < "fact"."date"
